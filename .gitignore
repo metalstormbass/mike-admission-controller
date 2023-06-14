@@ -2,6 +2,7 @@ ca.crt
 ca.key
 server.key
 server.csr
+server.crt
 sample.json
 good.sh
 bad.sh

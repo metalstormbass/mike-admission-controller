@@ -22,7 +22,7 @@ func main() {
 	// Define server
 
 	log.Printf("HTTP Server listening on port %s", port)
-	log.Print(http.ListenAndServeTLS(port_connect, "ca.crt",
-		"ca.key", r))
+	log.Print(http.ListenAndServeTLS(port_connect, "server.crt",
+		"server.key", r))
 
 }
