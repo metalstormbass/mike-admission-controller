@@ -1,5 +1,6 @@
 ca.crt
 ca.key
+ca.srl
 server.key
 server.csr
 server.crt
