@@ -6,8 +6,9 @@ import (
 
 	"github.com/metalstormbass/mike-admission-controller/src/policy"
 	"github.com/rs/zerolog/log"
-	admission "k8s.io/api/admission/v1"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -15,7 +16,7 @@ import (
 // Webhook
 
 func Validate(w http.ResponseWriter, r *http.Request) {
-	var admissionReview admission.AdmissionReview
+	var admissionReview admissionv1.AdmissionReview
 
 	// Parse Input
 
@@ -42,6 +43,7 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 
 func checkTag(pod corev1.Pod, uid types.UID, w http.ResponseWriter) {
 	var image string
+
 	for i := range pod.Spec.Containers {
 		image = pod.Spec.Containers[i].Image
 
@@ -49,13 +51,14 @@ func checkTag(pod corev1.Pod, uid types.UID, w http.ResponseWriter) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		var admissionResponse admission.AdmissionResponse
+		var admissionResponse admissionv1.AdmissionResponse
 		if policy.ValidateContainerTag(image) {
 
 			// Define Response
-			admissionResponse = admission.AdmissionResponse{
+			admissionResponse = admissionv1.AdmissionResponse{
 				Allowed: true,
 				UID:     uid,
+
 				Result: &metav1.Status{
 					Status:  metav1.StatusSuccess,
 					Message: "Container tag validation succeeded",
@@ -63,22 +66,14 @@ func checkTag(pod corev1.Pod, uid types.UID, w http.ResponseWriter) {
 				},
 			}
 
-			// Send Response
-
-			err := json.NewEncoder(w).Encode(admissionResponse)
-			if err != nil {
-				http.Error(w, "Failed to encode AdmissionReview response", http.StatusInternalServerError)
-				return
-			}
-			log.Print("Container tag validation succeeded")
-
 		} else {
 
 			// Define Respnse
 
-			admissionResponse = admission.AdmissionResponse{
+			admissionResponse = admissionv1.AdmissionResponse{
 				Allowed: false,
 				UID:     uid,
+
 				Result: &metav1.Status{
 					Status:  metav1.StatusFailure,
 					Message: "Container tag validation failed",
@@ -94,20 +89,27 @@ func checkTag(pod corev1.Pod, uid types.UID, w http.ResponseWriter) {
 					},
 				},
 			}
-
-			// Send Response
-			err := json.NewEncoder(w).Encode(admissionResponse)
-			if err != nil {
-				http.Error(w, "Failed to encode AdmissionReview response", http.StatusInternalServerError)
-				return
-			}
-			log.Print("Invalid container tag")
 		}
+
+		admissionReviewResponse := admissionv1.AdmissionReview{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "admission.k8s.io/v1",
+				Kind:       "AdmissionReview",
+			},
+			Response: &admissionResponse,
+		}
+		log.Print(admissionReviewResponse)
+		err := json.NewEncoder(w).Encode(admissionReviewResponse)
+		if err != nil {
+			http.Error(w, "Failed to encode AdmissionReview response", http.StatusInternalServerError)
+			return
+		}
+
 	}
 }
 
 /*
-
+Just keeping this here for reference
 
 		var data interface{}
 
