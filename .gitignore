@@ -9,3 +9,7 @@ good.sh
 bad.sh
 test.yaml
 deploy.sh
+text.txt
+kubernetes/test.yaml
+kubernetes/testdeploy.yaml
+dockerdeply.sh
