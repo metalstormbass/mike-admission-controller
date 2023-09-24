@@ -1,6 +1,7 @@
 # mike-admission-controller
 
-This is the code to a simple admission controller that looks to see if a container is deployed with the tag "latest". If so, it will reject the deployment.
+This is the code to a simple admission controller that looks to see if a 
+container is deployed with the tag "latest" and reject it.
 
 ## Usage
 
