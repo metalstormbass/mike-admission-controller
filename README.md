@@ -5,14 +5,18 @@ container is deployed with the tag "latest" and reject it.
 
 ## Usage
 
-Build the container:
+### Build the container
+
+```
+./generate_certs.sh
+```
 
 ```
 docker build . -t michaelbraunbass/mike-admission-controller:main
 docker push michaelbraunbass/mike-admission-controller:main
 ```
 
-Deploy to Kubernetes:
+###Deploy to Kubernete:
 
 ```
 kubectl apply -f kubernetes/deploy-mike-admission-controller.yaml
