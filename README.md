@@ -16,7 +16,7 @@ docker build . -t michaelbraunbass/mike-admission-controller:main
 docker push michaelbraunbass/mike-admission-controller:main
 ```
 
-###Deploy to Kubernete:
+### Deploy to Kubernete:
 
 ```
 kubectl apply -f kubernetes/deploy-mike-admission-controller.yaml
