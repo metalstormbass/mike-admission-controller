@@ -6,17 +6,12 @@ import (
 
 	"github.com/metalstormbass/mike-admission-controller/src/policy"
 	"github.com/rs/zerolog/log"
-
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 
-	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
-
-// Define a common interface for different resource types
-type KubernetesResource interface {
-	GetKind() string
-}
 
 // Webhook
 
@@ -31,54 +26,22 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 		log.Print("Error Decoding")
 		return
 	}
+
 	// Extract UID
 
 	uid := admissionReview.Request.UID
-	kind := (admissionReview.Request.Kind.Kind)
 
-	// Depending on the kind, unmarshal into appropriate struct
-	var resource interface{}
+	// Extract Pods
 
-	switch kind {
-	case "Deployment":
-		var deployment appsv1.Deployment
-		err := json.Unmarshal(admissionReview.Request.Object.Raw, &deployment)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			log.Print("Error unmarshaling Deployment")
-			return
-		}
-		resource = &deployment
-	case "Pod":
-		var pod corev1.Pod
-		err := json.Unmarshal(admissionReview.Request.Object.Raw, &pod)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			log.Print("Error unmarshaling Pod")
-			return
-		}
-		resource = &pod
-	case "Service":
-		var service corev1.Service
-		err := json.Unmarshal(admissionReview.Request.Object.Raw, &service)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			log.Print("Error unmarshaling Service")
-			return
-		}
-		resource = &service
-	default:
-		log.Printf("%s is not a supported type", kind)
-		return
-	}
+	var pod corev1.Pod
+	json.Unmarshal(admissionReview.Request.Object.Raw, &pod)
+
 	// Extract Image String and Check for tag
-
-	policy.AdmissionController(resource, uid, w)
+	checkTag(pod, uid, w)
 
 }
 
-/*
-
+func checkTag(pod corev1.Pod, uid types.UID, w http.ResponseWriter) {
 	var image string
 
 	for i := range pod.Spec.Containers {
@@ -144,4 +107,43 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
+
+/*
+Just keeping this here for reference
+
+		var data interface{}
+
+		// Convert to a blob of JSON
+		err := json.NewDecoder(r.Body).Decode(&data)
+		if err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		// Make JSON Parseable
+		jsonObj, ok := data.(map[string]interface{})
+		if !ok {
+			http.Error(w, "Invalid JSON object", http.StatusBadRequest)
+			return
+		}
+
+		containers := jsonObj["request"].(map[string]interface{})["object"].(map[string]interface{})["spec"].(map[string]interface{})["containers"].([]interface{})
+
+		// Iterate over the containers
+		var image string
+		for _, container := range containers {
+			containerMap, ok := container.(map[string]interface{})
+			if !ok {
+				log.Error()
+			}
+			image = containerMap["image"].(string)
+		}
+
+	   	if policy.ValidateContainerTag(image) {
+	   		log.Print("This is allowed")
+	   	} else {
+	   		log.Print("NOT allowed")
+	   	}
+
+	   }
 */

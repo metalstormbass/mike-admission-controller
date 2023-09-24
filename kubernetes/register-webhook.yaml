@@ -8,7 +8,7 @@ webhooks:
   - apiGroups:   [""]
     apiVersions: ["v1"]
     operations:  ["CREATE"]
-    resources:   ["pods", "deployments", "services"]
+    resources:   ["pods"]
     scope:       "Namespaced"
   clientConfig:
     service:
