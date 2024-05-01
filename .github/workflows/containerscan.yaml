@@ -21,21 +21,5 @@ jobs:
       run: |
         curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
 
-    # Authenticate to Chainguard
-    - name: Authenticate Chainguar
-      run: |
-        docker login "cgr.dev" --username ${{ secrets.CGUSER }} --password ${{ secrets.CGPASS }}
-        
-    # Docker Build
-    - name: Build Container     
-      run: |
-         docker pull cgr.dev/chainguard-private/go:1.21.5
-         docker pull cgr.dev/chainguard-private/glibc-dynamic:13
-         docker build . -t michaelbraunbass/mike-admission-controller:main
-    
-    - name: Run Grype
-      run: |
-        grype docker:michaelbraunbass/mike-admission-controller:main
-      continue-on-error: true  
 
 
